@@ -15,7 +15,6 @@ function App() {
       JSON.stringify(tarefas)
     )
 
-
   }, [tarefas])
 
   const tarefasFiltradas = tarefas.filter((tarefa) => {
@@ -26,15 +25,17 @@ function App() {
   }
   )
 
-  const pendentes = tarefasFiltradas.filter(
-    (tarefa) => tarefa.status === 'pendente'
+  const tarefasOrdenadas = ordernarPorPrioridade(tarefasFiltradas)
 
+  const pendentes = tarefasOrdenadas.filter(
+    (tarefa) => tarefa.status === 'pendente'
   )
-  const andamento = tarefasFiltradas.filter(
+
+  const andamento = tarefasOrdenadas.filter(
     (tarefa) => tarefa.status === 'andamento'
   )
 
-  const concluido = tarefasFiltradas.filter(
+  const concluido = tarefasOrdenadas.filter(
     (tarefa) => tarefa.status === 'concluido'
   )
 
@@ -148,7 +149,18 @@ function App() {
     }
 
   }
- 
+
+  function ordernarPorPrioridade(lista) {
+    const peso = {
+      alta: 3,
+      media: 2,
+      baixa: 1
+    }
+    return [...lista].sort((a, b) => {
+      return peso[b.prioridade] - peso[a.prioridade]
+    })
+  }
+
   return (
     <div>
       <h1>Kanban React</h1>
@@ -163,36 +175,36 @@ function App() {
         setPrioridade={setPrioridade}
         escolherPrioridade={escolherPrioridade}
       />
+      <div className="kanban">
+        <Coluna
+          titulo='Pendentes'
+          tarefas={pendentes}
+          mudarStatus={mudarStatus}
+          deletarTarefa={deletarTarefa}
+          editarTarefa={editarTarefa}
+          mudarPrioridade={mudarPrioridade}
+        />
 
-      <Coluna
-        titulo='Pendentes'
-        tarefas={pendentes}
-        mudarStatus={mudarStatus}
-        deletarTarefa={deletarTarefa}
-        editarTarefa={editarTarefa}
-        mudarPrioridade={mudarPrioridade}
-      />
-
-      <Coluna
-        titulo='Andamento'
-        tarefas={andamento}
-        mudarStatus={mudarStatus}
-        deletarTarefa={deletarTarefa}
-        editarTarefa={editarTarefa}
-        mudarPrioridade={mudarPrioridade}
-      />
-
-
-      <Coluna
-        titulo='Concluido'
-        tarefas={concluido}
-        mudarStatus={mudarStatus}
-        deletarTarefa={deletarTarefa}
-        editarTarefa={editarTarefa}
-        mudarPrioridade={mudarPrioridade}
-      />
+        <Coluna
+          titulo='Andamento'
+          tarefas={andamento}
+          mudarStatus={mudarStatus}
+          deletarTarefa={deletarTarefa}
+          editarTarefa={editarTarefa}
+          mudarPrioridade={mudarPrioridade}
+        />
 
 
+        <Coluna
+          titulo='Concluido'
+          tarefas={concluido}
+          mudarStatus={mudarStatus}
+          deletarTarefa={deletarTarefa}
+          editarTarefa={editarTarefa}
+          mudarPrioridade={mudarPrioridade}
+        />
+
+      </div>
     </div>
 
   )

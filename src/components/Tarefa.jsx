@@ -11,10 +11,11 @@ function Tarefa({ titulo, status, id, mudarStatus, deletarTarefa, editarTarefa, 
   const tituloComEmoji = `${emoji} ${titulo}`
   
   return (
-    <div className="tarefa">
+    <div className ={`tarefa ${prioridade}`}>
       <h3>{tituloComEmoji}</h3>
       <p>{status}</p>
-
+      
+      {console.log(prioridade)}
       <button
         onClick={() => mudarStatus(id)}
       >

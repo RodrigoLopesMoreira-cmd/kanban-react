@@ -1,3 +1,25 @@
+.kanban{
+    display:flex;
+    gap:20px;
+    align-items:flex-start;
+    padding:20px;
+}
+
+.coluna{
+    background:#202020;
+    padding:15px;
+    border-radius:10px;
+    width:300px;
+    min-height:500px;
+}
+
+.tarefa{
+    background:#303030;
+    padding:10px;
+    margin-bottom:10px;
+    border-radius:8px;
+}
+
 .tarefa {
   background: #2a2a2a;
   color: white;
@@ -5,3 +27,16 @@
   margin: 10px;
   border-radius: 8px;
 }
+
+.tarefa.alta {
+ border-left:5px solid red;
+}
+
+.tarefa.media{
+ border-left:5px solid yellow;
+}
+
+.tarefa.baixa{
+ border-left:5px solid green;
+}
+
