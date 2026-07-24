@@ -1,5 +1,6 @@
 
-function Tarefa({ titulo, status, id, mudarStatus, deletarTarefa, editarTarefa, prioridade, mudarPrioridade }) {
+function Tarefa({ titulo, status, id, mudarStatus, deletarTarefa, editarTarefa, prioridade, mudarPrioridade,iniciarArraste, tarefaArrastando, direcaoRotacao }) {
+  
   let emoji
   if (prioridade === 'baixa') {
     emoji = '🟢'
@@ -9,13 +10,26 @@ function Tarefa({ titulo, status, id, mudarStatus, deletarTarefa, editarTarefa, 
     emoji = '🟡'
   }
   const tituloComEmoji = `${emoji} ${titulo}`
-  
+
   return (
-    <div className ={`tarefa ${prioridade}`}>
+    <div className ={`tarefa ${prioridade} ${
+      tarefaArrastando === id
+      ? 'arrastando'
+      : ''
+    }`}
+
+    style={{transform:
+      tarefaArrastando === id
+      ? `rotate(${direcaoRotacao}deg)`
+      : 'rotate(0deg)'
+    }}
+    draggable
+    onDragStart={() => iniciarArraste(id)}
+    >
       <h3>{tituloComEmoji}</h3>
       <p>{status}</p>
       
-      {console.log(prioridade)}
+      
       <button
         onClick={() => mudarStatus(id)}
       >
@@ -39,6 +53,7 @@ function Tarefa({ titulo, status, id, mudarStatus, deletarTarefa, editarTarefa, 
       >
         próxima prioridade
       </button>
+      
     </div>
   )
 }

@@ -2,13 +2,19 @@ import { useState, useEffect } from "react"
 import Coluna from "./components/Coluna"
 import Formulario from "./components/Formulario"
 import "./App.css"
-
+import Modal from "./components/Modal"
 function App() {
   const tarefasSalvas = JSON.parse(localStorage.getItem('tarefas') || '[]')
   const [novaTarefa, setNovaTarefa] = useState('')
   const [tarefas, setTarefas] = useState(tarefasSalvas)
   const [busca, setBusca] = useState('')
   const [prioridade, setPrioridade] = useState('baixa')
+  const [tarefaArrastada, setTarefaArrastada] = useState(null)
+  const [colunaAtiva, setColunaAtiva] = useState(null)
+  const [tarefaArrastando, setTarefaArrastando] = useState(null)
+  const [direcaoRotacao, setDirecaoRotacao] = useState(0)
+  const [modalAberto, setModalAberto] = useState(false)
+  const [tarefaSelecionada, setTarefaSelecionada] = useState(null)
   useEffect(() => {
     localStorage.setItem(
       'tarefas',
@@ -38,6 +44,12 @@ function App() {
   const concluido = tarefasOrdenadas.filter(
     (tarefa) => tarefa.status === 'concluido'
   )
+
+  const progresso = tarefas.length === 0
+    ? 0
+    : ((concluido.length / tarefas.length) * 100).toFixed(0)
+
+
 
   function adicionarTarefa() {
 
@@ -71,7 +83,6 @@ function App() {
           return { ...tarefa, status: 'pendente' }
         }
       }
-
       return tarefa
     })
     setTarefas(novasTarefas)
@@ -99,37 +110,45 @@ function App() {
     setTarefas(novasTarefas)
   }
 
-
   function editarTarefa(id) {
+    const tarefa = tarefas.find(
+      (item) => item.id === id)
 
-    const novoTitulo = prompt('Digite o novo Titulo: ')
-    if (novoTitulo === null) return
+    if (!tarefa) return
 
-
-    const editar = tarefas.map((tarefa) => {
-
-      if (tarefa.id === id) {
-
-        return {
-          ...tarefa,
-          titulo: novoTitulo
-
-        }
-      }
-      return tarefa
-    })
-    setTarefas(editar)
+    setTarefaSelecionada(tarefa)
+    setModalAberto(true)
   }
 
-  function deletarTarefa(id) {
+  function fecharModal() {
+    setModalAberto(false)
+    setTarefaSelecionada(null)
+  }
 
-    const resposta = confirm("Você deseja realmente excluir essa tarefa?")
+  function salvarEdicao(id, titulo) {
+    const novasTarefas = tarefas.map((tarefa) => {
+      if (tarefa.id === id)
+        return {
+          ...tarefa,
+          titulo: titulo
+        }
+      return tarefa
+    })
+
+    setTarefas(novasTarefas)
+    setModalAberto(false)
+  }
+
+
+  function deletarTarefa(id) {
+    const resposta = confirm(
+      "Você deseja realmente excluir essa tarefa?"
+    )
 
     if (!resposta) return
 
-    const excluir = tarefas.filter((tarefa) =>
-      tarefa.id !== id
-    )
+    const excluir = tarefas.filter(
+      (tarefa) => tarefa.id !== id)
     setTarefas(excluir)
 
   }
@@ -161,9 +180,71 @@ function App() {
     })
   }
 
+  function iniciarArraste(id) {
+    setTarefaArrastada(id)
+    setTarefaArrastando(id)
+  }
+
+  function moverPorArraste(novoStatus) {
+
+    const novasTarefas = tarefas.map((tarefa) => {
+      if (tarefa.id === tarefaArrastada) {
+        return {
+          ...tarefa,
+          status: novoStatus
+        }
+      }
+      return tarefa
+    })
+    setTarefas(novasTarefas)
+    setTarefaArrastada(null)
+    setTarefaArrastando(null)
+
+  }
+
+  const ordemColunas = {
+    pendente: 1,
+    andamento: 2,
+    concluido: 3
+  }
+
+  function calcularDirecao(statusDestino) {
+
+    const tarefa = tarefas.find(
+      (item) => item.id === tarefaArrastada
+    )
+
+    if (!tarefa) return
+
+    const origem = ordemColunas[tarefa.status]
+    const destino = ordemColunas[statusDestino]
+
+    if (origem < destino) {
+      setDirecaoRotacao(8)
+    }
+    else if (origem > destino) {
+      setDirecaoRotacao(-8)
+    }
+    else {
+      setDirecaoRotacao(0)
+    }
+  }
+
+
   return (
     <div>
       <h1>Kanban React</h1>
+      <div className="progresso-container">
+        <p>progresso:{progresso}%</p>
+        <p>Total de Tarefas: {tarefas.length}</p>
+        <div className="barra">
+          <div className="barra-preenchida"
+            style={{
+              width: `${progresso}%`
+            }}
+          ></div>
+        </div>
+      </div>
 
       <Formulario
         novaTarefa={novaTarefa}
@@ -174,7 +255,16 @@ function App() {
         prioridade={prioridade}
         setPrioridade={setPrioridade}
         escolherPrioridade={escolherPrioridade}
+
       />
+
+      {modalAberto && (
+        <Modal
+          tarefa={tarefaSelecionada}
+          salvarEdicao={salvarEdicao}
+          fecharModal={fecharModal}
+        />)}
+
       <div className="kanban">
         <Coluna
           titulo='Pendentes'
@@ -183,6 +273,15 @@ function App() {
           deletarTarefa={deletarTarefa}
           editarTarefa={editarTarefa}
           mudarPrioridade={mudarPrioridade}
+          iniciarArraste={iniciarArraste}
+          moverPorArraste={moverPorArraste}
+          statusColuna={'pendente'}
+          colunaAtiva={colunaAtiva}
+          setColunaAtiva={setColunaAtiva}
+          statusPorColuna='pendente'
+          tarefaArrastando={tarefaArrastando}
+          calcularDirecao={calcularDirecao}
+          direcaoRotacao={direcaoRotacao}
         />
 
         <Coluna
@@ -192,8 +291,16 @@ function App() {
           deletarTarefa={deletarTarefa}
           editarTarefa={editarTarefa}
           mudarPrioridade={mudarPrioridade}
+          iniciarArraste={iniciarArraste}
+          moverPorArraste={moverPorArraste}
+          statusColuna={'andamento'}
+          colunaAtiva={colunaAtiva}
+          setColunaAtiva={setColunaAtiva}
+          statusPorColuna='andamento'
+          tarefaArrastando={tarefaArrastando}
+          calcularDirecao={calcularDirecao}
+          direcaoRotacao={direcaoRotacao}
         />
-
 
         <Coluna
           titulo='Concluido'
@@ -202,8 +309,16 @@ function App() {
           deletarTarefa={deletarTarefa}
           editarTarefa={editarTarefa}
           mudarPrioridade={mudarPrioridade}
+          iniciarArraste={iniciarArraste}
+          moverPorArraste={moverPorArraste}
+          statusColuna={'concluido'}
+          colunaAtiva={colunaAtiva}
+          setColunaAtiva={setColunaAtiva}
+          statusPorColuna='concluido'
+          tarefaArrastando={tarefaArrastando}
+          calcularDirecao={calcularDirecao}
+          direcaoRotacao={direcaoRotacao}
         />
-
       </div>
     </div>
 
